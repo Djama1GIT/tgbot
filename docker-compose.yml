@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  server:
+    build:
+      context: .
+    container_name: tgbot
+    command: sh -c "python main.py"
+    restart: always
+    env_file:
+      - .env
+      - .env-non-dev
