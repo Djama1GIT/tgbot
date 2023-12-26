@@ -11,8 +11,10 @@ class Settings(BaseSettings):
         env_file = '.env'
 
     TOKEN: str = os.getenv('TOKEN')
-    CHANNEL_LINK: str = os.getenv('CHANNEL')
     OWNER: int = os.getenv('OWNER')
+
+    CHANNEL_LINK: str = os.getenv('CHANNEL_LINK')
+    LINK_TEXT: str = os.getenv("LINK_TEXT")
 
 
 settings = Settings()

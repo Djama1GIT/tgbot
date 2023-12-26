@@ -62,11 +62,12 @@ def send_beautiful_text(message: telebot.types.Message):
 def send_beautiful_text(message: telebot.types.Message):
     logger.info(remove_empty_values(message))
     if message.from_user.id == settings.OWNER:
-        beautiful_text = make_text_beautiful("[👉 И напоминай...]") + f"({settings.CHANNEL_LINK})"
+        beautiful_text = f"<b><a href=\"{settings.CHANNEL_LINK}\">" \
+                         f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>"
         bot.send_message(
             message.chat.id,
             beautiful_text,
-            parse_mode="markdown",
+            parse_mode="HTML",
         )
     else:
         bot.reply_to(message, "Sorry, I didn't understand that command.\nUse: /help")
@@ -91,11 +92,12 @@ def send_help(message: telebot.types.Message):
 def unknown_command(message: telebot.types.Message):
     logger.info(remove_empty_values(message))
     if message.from_user.id == settings.OWNER:
-        beautiful_text = make_text_beautiful(message.text + "\n\n[👉 И напоминай...]")
+        beautiful_text = make_text_beautiful(message.text + "\n\n")
         bot.reply_to(
             message,
-            beautiful_text + f"({settings.CHANNEL_LINK})",
-            parse_mode="markdown",
+            beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
+                             f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
+            parse_mode="HTML",
         )
     else:
         bot.reply_to(message, "Sorry, I didn't understand that command.\nUse: /help")
