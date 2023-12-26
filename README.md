@@ -13,7 +13,9 @@ git clone https://github.com/Djama1GIT/tgbot.git
 cd tgbot
 ```
 
-3. Start the project:
+3. Configure the virtual environment settings
+
+4. Start the project:
 
 ```bash
 docker-compose up --build
