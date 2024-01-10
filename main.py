@@ -1,3 +1,5 @@
+from telebot import types
+
 from logger import logger
 from config import settings
 import telebot
@@ -32,7 +34,7 @@ def make_text_beautiful(text: str) -> str:
     digits_abc = dict(
         zip(
             "1234567890",
-            "𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗𝟎",
+            "𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿𝟶",
         )
     )
 
@@ -86,6 +88,45 @@ def send_help(message: telebot.types.Message):
         help_text,
         parse_mode="markdown",
     )
+
+
+@bot.message_handler(commands=['send_btnpost_to_channel'])
+def command_send_btnpost_to_channel(message: telebot.types.Message):
+    if message.from_user.id == settings.OWNER:
+        parts = message.text.split(' ', 1)
+        if len(parts) != 2 or '|#|' not in parts[1]:
+            bot.reply_to(message,
+                         "The command format is incorrect. Use: /send_btnpost_to_channel "
+                         "<channel_username> |#| <post_text> |#| <btn-text> |#| <btn_link>")
+            return
+
+        logger.info(parts[1].split("|#|"))
+        channel_username, post_text, btn_text, btn_link = parts[1].split('|#|', 3)
+        channel_username = channel_username.strip()
+        post_text = post_text.strip()
+        btn_text = btn_text.strip()
+        btn_link = btn_link.strip()
+
+        if not channel_username.startswith('@'):
+            channel_username = '@' + channel_username
+
+        if not post_text or not btn_text or not btn_link:
+            bot.reply_to(message,
+                         "You must specify the channel username, text of the message, "
+                         "the text of the button, and the link.")
+            return
+
+        markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton(text=btn_text, url=btn_link)
+        markup.add(btn)
+
+        try:
+            bot.send_message(chat_id=channel_username, text=post_text, reply_markup=markup)
+            bot.reply_to(message, "Message sent successfully to the channel.")
+        except Exception as e:
+            bot.reply_to(message, f"An error occurred while sending the message: {e}")
+    else:
+        bot.reply_to(message, "You do not have permission to use this command.")
 
 
 @bot.message_handler(content_types=['text'])
