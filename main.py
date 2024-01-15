@@ -116,27 +116,29 @@ def command_send_btnpost_to_channel(message: telebot.types.Message):
             bot.reply_to(message, f"An error occurred while sending the message: {e}")
 
 
-@bot.message_handler(func=lambda message: message.chat.type == 'private')
+@bot.message_handler(content_types=['text', 'photo', 'video', 'sticker', 'document', 'audio', 'voice'])
 def handle_private_message(message):
     logger.info(remove_empty_values(message))
 
     if message.from_user.id == settings.OWNER and message.reply_to_message:
         original_chat_id = message.reply_to_message.forward_from.id if message.reply_to_message.forward_from else None
         if original_chat_id:
-            bot.send_message(original_chat_id, make_text_beautiful(message.text))
+            if message.content_type == 'text':
+                bot.send_message(original_chat_id, make_text_beautiful(message.text))
+            else:
+                bot.forward_message(original_chat_id, settings.OWNER, message.message_id)
 
     elif message.from_user.id != settings.OWNER:
         bot.forward_message(settings.OWNER, message.chat.id, message.message_id)
 
     elif message.from_user.id == settings.OWNER:
-        if message.from_user.id == settings.OWNER:
-            beautiful_text = make_text_beautiful(message.text + "\n\n")
-            bot.reply_to(
-                message,
-                beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
-                                 f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
-                parse_mode="HTML",
-            )
+        beautiful_text = make_text_beautiful(message.text + "\n\n") if message.content_type == 'text' else ''
+        bot.reply_to(
+            message,
+            beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
+                             f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
+            parse_mode="HTML",
+        )
 
 
 bot.infinity_polling()
