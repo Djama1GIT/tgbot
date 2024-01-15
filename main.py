@@ -46,7 +46,7 @@ def make_text_beautiful(text: str) -> str:
 
 
 @bot.message_handler(commands=['start'])
-def send_beautiful_text(message: telebot.types.Message):
+def start(message: telebot.types.Message):
     beautiful_text = make_text_beautiful(settings.WELCOME_MESSAGE)
     bot.reply_to(message, beautiful_text)
 
@@ -67,7 +67,7 @@ def send_beautiful_text(message: telebot.types.Message):
 
 
 @bot.message_handler(commands=['s'])
-def send_beautiful_text(message: telebot.types.Message):
+def s(message: telebot.types.Message):
     logger.info(remove_empty_values(message))
     if message.from_user.id == settings.OWNER:
         beautiful_text = f"<b><a href=\"{settings.CHANNEL_LINK}\">" \
