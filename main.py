@@ -123,10 +123,11 @@ def handle_private_message(message):
     if message.from_user.id == settings.OWNER and message.reply_to_message:
         original_chat_id = message.reply_to_message.forward_from.id if message.reply_to_message.forward_from else None
         if original_chat_id:
-            if message.content_type == 'text':
-                bot.send_message(original_chat_id, make_text_beautiful(message.text))
-            else:
-                bot.forward_message(original_chat_id, settings.OWNER, message.message_id)
+            bot.copy_message(
+                chat_id=original_chat_id,
+                from_chat_id=message.chat.id,
+                message_id=message.message_id
+            )
 
     elif message.from_user.id != settings.OWNER:
         bot.forward_message(settings.OWNER, message.chat.id, message.message_id)
@@ -139,6 +140,7 @@ def handle_private_message(message):
                              f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
             parse_mode="HTML",
         )
+
 
 
 bot.infinity_polling()
