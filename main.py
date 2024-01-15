@@ -45,6 +45,12 @@ def make_text_beautiful(text: str) -> str:
     )
 
 
+@bot.message_handler(commands=['start'])
+def send_beautiful_text(message: telebot.types.Message):
+    beautiful_text = make_text_beautiful(settings.WELCOME_MESSAGE)
+    bot.reply_to(message, beautiful_text)
+
+
 @bot.message_handler(commands=['font'])
 def send_beautiful_text(message: telebot.types.Message):
     logger.info(remove_empty_values(message))
@@ -71,23 +77,6 @@ def send_beautiful_text(message: telebot.types.Message):
             beautiful_text,
             parse_mode="HTML",
         )
-    else:
-        bot.reply_to(message, "Sorry, I didn't understand that command.\nUse: /help")
-
-
-@bot.message_handler(commands=['help', 'start'])
-def send_help(message: telebot.types.Message):
-    logger.info(remove_empty_values(message))
-    help_text = "Welcome!\n\n" \
-                "Commands:\n" \
-                "To beautify your text, send a message with the:\n" \
-                "_/font_ command followed by your text.\n" \
-                "```for-example\n/font Hello, world!```\n"
-    bot.reply_to(
-        message,
-        help_text,
-        parse_mode="markdown",
-    )
 
 
 @bot.message_handler(commands=['send_btnpost_to_channel'])
@@ -125,23 +114,29 @@ def command_send_btnpost_to_channel(message: telebot.types.Message):
             bot.reply_to(message, "Message sent successfully to the channel.")
         except Exception as e:
             bot.reply_to(message, f"An error occurred while sending the message: {e}")
-    else:
-        bot.reply_to(message, "You do not have permission to use this command.")
 
 
-@bot.message_handler(content_types=['text'])
-def unknown_command(message: telebot.types.Message):
+@bot.message_handler(func=lambda message: message.chat.type == 'private')
+def handle_private_message(message):
     logger.info(remove_empty_values(message))
-    if message.from_user.id == settings.OWNER:
-        beautiful_text = make_text_beautiful(message.text + "\n\n")
-        bot.reply_to(
-            message,
-            beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
-                             f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
-            parse_mode="HTML",
-        )
-    else:
-        bot.reply_to(message, "Sorry, I didn't understand that command.\nUse: /help")
+
+    if message.from_user.id == settings.OWNER and message.reply_to_message:
+        original_chat_id = message.reply_to_message.forward_from.id if message.reply_to_message.forward_from else None
+        if original_chat_id:
+            bot.send_message(original_chat_id, make_text_beautiful(message.text))
+
+    elif message.from_user.id != settings.OWNER:
+        bot.forward_message(settings.OWNER, message.chat.id, message.message_id)
+
+    elif message.from_user.id == settings.OWNER:
+        if message.from_user.id == settings.OWNER:
+            beautiful_text = make_text_beautiful(message.text + "\n\n")
+            bot.reply_to(
+                message,
+                beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
+                                 f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
+                parse_mode="HTML",
+            )
 
 
 bot.infinity_polling()
