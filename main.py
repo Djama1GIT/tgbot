@@ -1,8 +1,14 @@
+import os
+import re
+import uuid
+
 from telebot import types
 
 from logger import logger
 from config import settings
 import telebot
+
+from parser import TextParserFromImage
 
 logger.info("start")
 
@@ -116,8 +122,37 @@ def command_send_btnpost_to_channel(message: telebot.types.Message):
             bot.reply_to(message, f"An error occurred while sending the message: {e}")
 
 
+def scrape_text(photo: bytes) -> str:
+    image_filename = f"{uuid.uuid4()}.png"
+    with open(image_filename, 'wb') as file:
+        file.write(photo)
+
+    image_filepath = os.path.join(os.getcwd(), image_filename)
+
+    text_parser = TextParserFromImage()
+    text = text_parser.parse_text_from_image(image_filepath)
+
+    os.remove(image_filepath)
+
+    return text
+
+
+def download_photo_from_message(message: telebot.types.Message):
+    photo_id = message.photo[-1].file_id
+    file_info = bot.get_file(photo_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    return downloaded_file
+
+
+def remove_line_breaks_without_dot(text):
+    pattern = r'(?<!\.)\n'
+    result = re.sub(pattern, ' ', text)
+    return result
+
+
 @bot.message_handler(content_types=['text', 'photo', 'video', 'sticker', 'document', 'audio', 'voice'])
-def handle_private_message(message):
+def handle_private_message(message: telebot.types.Message):
     logger.info(remove_empty_values(message))
 
     if message.from_user.id == settings.OWNER and message.reply_to_message:
@@ -133,14 +168,21 @@ def handle_private_message(message):
         bot.forward_message(settings.OWNER, message.chat.id, message.message_id)
 
     elif message.from_user.id == settings.OWNER:
-        beautiful_text = make_text_beautiful(message.text + "\n\n") if message.content_type == 'text' else ''
-        bot.reply_to(
-            message,
-            beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
-                             f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
-            parse_mode="HTML",
-        )
-
+        if message.content_type == 'text':
+            beautiful_text = make_text_beautiful(message.text + "\n\n")
+            bot.reply_to(
+                message,
+                beautiful_text + f"<b><a href=\"{settings.CHANNEL_LINK}\">"
+                                 f"{make_text_beautiful(settings.LINK_TEXT)}</a></b>",
+                parse_mode="HTML",
+            )
+        elif message.content_type == 'photo':
+            photo = download_photo_from_message(message)
+            scraped_text = remove_line_breaks_without_dot(scrape_text(photo))
+            bot.reply_to(
+                message,
+                scraped_text,
+            )
 
 
 bot.infinity_polling()
