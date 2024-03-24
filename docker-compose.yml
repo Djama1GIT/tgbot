@@ -4,7 +4,7 @@ services:
     build:
       context: .
     container_name: tgbot
-    command: sh -c "python main.py"
+    command: sh -c "python bot"
     restart: always
     env_file:
       - .env

@@ -1,20 +1,15 @@
-import os.path
-from io import BytesIO
-
 from time import sleep
-from typing import List
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
 from webdriver_manager.firefox import GeckoDriverManager
 
-from config import Settings
-from logger import logger
+from .config import Settings
+from .logger import logger
 
 
 class TextParserFromImage:
